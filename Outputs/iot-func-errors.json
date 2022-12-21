@@ -1,0 +1,13 @@
+{
+    "Name": "iot-func-errors",
+    "DataSourceType": "Azure Function",
+    "AzureFunctionProperties": {
+        "FunctionAppName": "iot-processing",
+        "FunctionName": "error-process",
+        "ApiKey": null,
+        "MaxBatchSize": 262144,
+        "MaxBatchCount": 100
+    },
+    "DataSourceCredentialDomain": "ae2352e1-eafd-4b48-8eec-398ad4afee01.StreamAnalystics",
+    "ScriptType": "Output"
+}

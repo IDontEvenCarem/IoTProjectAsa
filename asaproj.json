@@ -1,0 +1,42 @@
+{
+    "name": "iot-calculations",
+    "startFile": "Transformation.asaql",
+    "configurations": [
+        {
+            "filePath": "JobConfig.json",
+            "subType": "JobConfig"
+        },
+        {
+            "filePath": "Outputs/errors-critical-out.json",
+            "subType": "Output"
+        },
+        {
+            "filePath": "Outputs/errors-normal-out.json",
+            "subType": "Output"
+        },
+        {
+            "filePath": "Outputs/kdi-out.json",
+            "subType": "Output"
+        },
+        {
+            "filePath": "Outputs/prod-per-workorder-out.json",
+            "subType": "Output"
+        },
+        {
+            "filePath": "Outputs/temperature-out.json",
+            "subType": "Output"
+        },
+        {
+            "filePath": "Inputs/iot-in.json",
+            "subType": "Input"
+        },
+        {
+            "filePath": "Outputs/iot-func-errors.json",
+            "subType": "Output"
+        },
+        {
+            "filePath": "Outputs/iot-func-kpi.json",
+            "subType": "Output"
+        }
+    ]
+}

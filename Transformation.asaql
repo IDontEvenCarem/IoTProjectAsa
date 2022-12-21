@@ -1,0 +1,78 @@
+SELECT
+    MAX(GoodCount) GoodCount, MAX(BadCount) BadCount, WorkorderId, IoTHub.ConnectionDeviceId as Device
+INTO
+    [prod-per-workorder-out]
+FROM
+    [iot-in]
+WHERE type = 'telemetry'
+GROUP BY WorkorderId, IoTHub.ConnectionDeviceId, TumblingWindow(minute, 15)
+
+
+SELECT
+    MAX(temperature), MIN(temperature), AVG(temperature), IoTHub.ConnectionDeviceId device, System.Timestamp() time
+INTO [temperature-out]
+FROM [iot-in]
+WHERE type = 'telemetry'
+GROUP BY IoTHub.ConnectionDeviceId, TumblingWindow(minute, 15)
+
+
+SELECT 
+    IoTHub.ConnectionDeviceId as Device,
+    (MAX(GoodCount) - MIN(GoodCount)) / (MAX(GoodCount) - MIN(GoodCount) + MAX(BadCount) - MIN(BadCount)) as KPI
+INTO [kdi-out]
+FROM [iot-in]
+WHERE type = 'telemetry'
+GROUP BY IotHub.ConnectionDeviceId, TumblingWindow(minute, 15)
+
+
+SELECT
+    DeviceId, SUM(unknown) + SUM(sensor) + SUM(power) + SUM(emergency) as ErrorCount
+INTO [errors-normal-out]
+FROM (
+    SELECT
+        DeviceId,
+        CASE WHEN unknown > LAG(unknown) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as unknown,
+        CASE WHEN sensor > LAG(sensor) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as sensor,
+        CASE WHEN power > LAG(power) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as power,
+        CASE WHEN emergency > LAG(emergency) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as emergency
+    FROM (
+        SELECT
+            IoTHub.ConnectionDeviceId as DeviceId,
+            CASE WHEN (DeviceError & 8) > 0 THEN 1 ELSE 0 END as unknown, 
+            CASE WHEN (DeviceError & 4) > 0 THEN 1 ELSE 0 END as sensor,
+            CASE WHEN (DeviceError & 2) > 0 THEN 1 ELSE 0 END as power,
+            CASE WHEN (DeviceError & 1) > 0 THEN 1 ELSE 0 END as emergency
+        FROM
+            [iot-in]
+        WHERE
+            type = 'error'
+    ) expanded
+) delta
+GROUP BY DeviceId, TumblingWindow(minute, 30)
+
+
+SELECT
+    DeviceId, SUM(unknown) unknown, SUM(sensor) sensor, SUM(power) power, SUM(emergency) emergency
+INTO [errors-critical-out]
+FROM (
+    SELECT
+        DeviceId,
+        CASE WHEN unknown > LAG(unknown) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as unknown,
+        CASE WHEN sensor > LAG(sensor) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as sensor,
+        CASE WHEN power > LAG(power) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as power,
+        CASE WHEN emergency > LAG(emergency) OVER (LIMIT DURATION(minute, 30)) THEN 1 ELSE 0 END as emergency
+    FROM (
+        SELECT
+            IoTHub.ConnectionDeviceId as DeviceId,
+            CASE WHEN (DeviceError & 8) > 0 THEN 1 ELSE 0 END as unknown, 
+            CASE WHEN (DeviceError & 4) > 0 THEN 1 ELSE 0 END as sensor,
+            CASE WHEN (DeviceError & 2) > 0 THEN 1 ELSE 0 END as power,
+            CASE WHEN (DeviceError & 1) > 0 THEN 1 ELSE 0 END as emergency
+        FROM
+            [iot-in]
+        WHERE
+            type = 'error'
+    ) expanded
+) delta
+GROUP BY DeviceId, TumblingWindow(minute, 15)
+HAVING (unknown + sensor + power + emergency) > 3

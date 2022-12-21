@@ -1,0 +1,13 @@
+{
+    "Name": "iot-func-kpi",
+    "DataSourceType": "Azure Function",
+    "AzureFunctionProperties": {
+        "FunctionAppName": "iot-processing",
+        "FunctionName": "monitor-kpi",
+        "ApiKey": null,
+        "MaxBatchSize": 262144,
+        "MaxBatchCount": 100
+    },
+    "DataSourceCredentialDomain": "b2221693-01af-471c-a70d-35c454964c1f.StreamAnalystics",
+    "ScriptType": "Output"
+}
